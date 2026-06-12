@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Trading Journal</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#050608;--surface:#0e1116;--card:#111519;--card2:#161b21;
+  --border:#1e2530;--border2:#252f3d;
+  --green:#00e676;--red:#ff1744;--yellow:#ffd600;--cyan:#00e5ff;--purple:#d500f9;
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#475569;
+  --mono:'IBM Plex Mono',monospace;--sans:'Inter',sans-serif;
+}
+html,body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;}
+::-webkit-scrollbar{width:3px;height:3px;}
+::-webkit-scrollbar-thumb{background:var(--border2);}
+
+/* HEADER */
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;height:50px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.logo{font-family:var(--mono);font-size:15px;font-weight:700;letter-spacing:-1px;}
+.logo span:nth-child(1){color:var(--cyan);}
+.logo span:nth-child(2){color:var(--text3);}
+.logo span:nth-child(3){color:var(--green);}
+.hbtns{display:flex;gap:6px;}
+.hbtn{font-family:var(--mono);font-size:10px;padding:5px 10px;border-radius:4px;cursor:pointer;border:1px solid var(--border2);background:var(--surface);color:var(--text2);}
+
+/* ACCOUNT BAR */
+.acc-bar{background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:8px 12px;gap:6px;overflow-x:auto;}
+.acc-bar::-webkit-scrollbar{display:none;}
+.atab{font-family:var(--mono);font-size:11px;padding:5px 12px;border-radius:20px;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--text3);white-space:nowrap;transition:all .15s;}
+.atab.active{background:var(--cyan);color:#000;border-color:var(--cyan);font-weight:700;}
+.atab.add{border-style:dashed;color:var(--text3);}
+
+/* TABS */
+.tabs{background:var(--surface);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{font-family:var(--mono);font-size:11px;padding:10px 14px;cursor:pointer;color:var(--text3);border-bottom:2px solid transparent;white-space:nowrap;}
+.tab.active{color:var(--cyan);border-bottom-color:var(--cyan);}
+
+/* SECTIONS */
+.sec{display:none;padding:14px 14px 80px;}
+.sec.active{display:block;}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:12px;}
+.card-title{font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+
+/* STATS GRID */
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.sg.g4{grid-template-columns:1fr 1fr 1fr 1fr;}
+.sbox{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;}
+.sbox.hi{border-color:var(--cyan);background:rgba(0,229,255,.04);}
+.slbl{font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;}
+.sval{font-family:var(--mono);font-size:20px;font-weight:700;line-height:1;}
+.sval.g{color:var(--green);}
+.sval.r{color:var(--red);}
+.sval.y{color:var(--yellow);}
+.sval.c{color:var(--cyan);}
+.ssub{font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:3px;}
+
+/* WIN RATE */
+.wr-wrap{display:flex;align-items:center;gap:16px;margin-bottom:12px;}
+.ring-w{position:relative;width:90px;height:90px;flex-shrink:0;}
+svg.ring{transform:rotate(-90deg);}
+.rbg{fill:none;stroke:var(--border2);stroke-width:8;}
+.rarc{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset .6s ease,stroke .3s;}
+.rcenter{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.rpct{font-family:var(--mono);font-size:20px;font-weight:700;}
+.rlbl{font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:.8px;margin-top:1px;}
+.wr-bars{flex:1;}
+.brow{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
+.blbl{font-family:var(--mono);font-size:10px;color:var(--text3);width:32px;}
+.btrack{flex:1;height:5px;background:var(--border2);border-radius:3px;overflow:hidden;}
+.bfill{height:100%;border-radius:3px;transition:width .4s ease;}
+.bfill.g{background:var(--green);}
+.bfill.r{background:var(--red);}
+.bfill.y{background:var(--yellow);}
+.bcnt{font-family:var(--mono);font-size:10px;color:var(--text3);width:16px;text-align:right;}
+
+/* FORM */
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.fgrid.g3{grid-template-columns:1fr 1fr 1fr;}
+.field label{display:block;font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;}
+.field input,.field select,.field textarea{
+  width:100%;background:var(--bg);border:1px solid var(--border2);
+  border-radius:5px;padding:8px 10px;color:var(--text);
+  font-family:var(--mono);font-size:12px;outline:none;
+  -webkit-appearance:none;appearance:none;
+}
+.field input:focus,.field select:focus{border-color:var(--cyan);}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23475569'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;}
+.field select option{background:var(--card);}
+.field textarea{resize:none;height:50px;font-size:11px;}
+
+.calc-box{background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.18);border-radius:6px;padding:10px 12px;margin-bottom:10px;display:flex;flex-wrap:wrap;gap:10px;}
+.citem{font-family:var(--mono);font-size:11px;}
+.clbl{color:var(--text3);margin-right:3px;}
+.cval{font-weight:700;}
+.cval.g{color:var(--green);}
+.cval.r{color:var(--red);}
+.cval.c{color:var(--cyan);}
+
+.btn{width:100%;padding:11px;border:none;border-radius:6px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.5px;}
+.btn.primary{background:var(--cyan);color:#000;}
+.btn.danger{background:rgba(255,23,68,.15);color:var(--red);border:1px solid var(--red);}
+
+/* ACC INFO */
+.acc-info{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:12px;}
+.ai-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.ai-name{font-family:var(--mono);font-weight:700;font-size:14px;}
+.atype{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:.8px;}
+.atype.real{background:rgba(0,230,118,.12);color:var(--green);}
+.atype.prop{background:rgba(213,0,249,.12);color:var(--purple);}
+.atype.demo{background:rgba(0,229,255,.12);color:var(--cyan);}
+.ai-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.ais{background:var(--bg);border-radius:5px;padding:7px 8px;}
+.ais-l{font-family:var(--mono);font-size:8px;color:var(--text3);text-transform:uppercase;margin-bottom:2px;}
+.ais-v{font-family:var(--mono);font-size:12px;font-weight:600;}
+
+/* TABLE */
+.tcard{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px;}
+.thead{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--border);}
+.ttitle{font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;}
+.twrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+th{padding:7px 9px;font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;text-align:left;white-space:nowrap;}
+td{padding:8px 9px;font-family:var(--mono);font-size:11px;border-bottom:1px solid rgba(30,37,48,.5);white-space:nowrap;}
+tr:last-child td{border-bottom:none;}
+
+.badge{display:inline-block;padding:2px 6px;border-radius:3px;font-size:9px;font-weight:700;letter-spacing:.4px;}
+.badge.win{background:rgba(0,230,118,.12);color:var(--green);}
+.badge.loss{background:rgba(255,23,68,.12);color:var(--red);}
+.badge.be{background:rgba(255,214,0,.12);color:var(--yellow);}
+.badge.long{background:rgba(0,229,255,.1);color:var(--cyan);}
+.badge.short{background:rgba(213,0,249,.1);color:var(--purple);}
+.pos{color:var(--green);}
+.neg{color:var(--red);}
+
+.delbtn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:0 4px;font-family:var(--mono);}
+
+.empty{padding:32px;text-align:center;color:var(--text3);font-family:var(--mono);font-size:11px;}
+.ei{font-size:22px;margin-bottom:6px;}
+
+/* REPORT */
+.rbtns{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px;}
+.rbtns::-webkit-scrollbar{display:none;}
+.rbtn{font-family:var(--mono);font-size:11px;padding:6px 14px;border-radius:5px;cursor:pointer;border:1px solid var(--border2);background:var(--surface);color:var(--text3);white-space:nowrap;}
+.rbtn.active{background:var(--cyan);color:#000;border-color:var(--cyan);font-weight:700;}
+
+/* ACCOUNTS PAGE */
+.acc-item{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;}
+.acc-item-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.acc-item-name{font-family:var(--mono);font-weight:700;font-size:13px;}
+.acc-item-meta{font-family:var(--mono);font-size:10px;color:var(--text3);line-height:1.6;}
+.acc-item-btns{display:flex;gap:6px;margin-top:8px;}
+.abtn{font-family:var(--mono);font-size:10px;padding:5px 12px;border-radius:4px;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--text2);}
+.abtn.sel{border-color:var(--cyan);color:var(--cyan);}
+.abtn.del{border-color:var(--red);color:var(--red);}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:flex-end;justify-content:center;z-index:200;}
+.overlay.hidden{display:none;}
+.modal{background:var(--card);border:1px solid var(--border2);border-radius:12px 12px 0 0;padding:20px;width:100%;max-width:500px;}
+.modal-title{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--cyan);margin-bottom:14px;}
+.mbtns{display:flex;gap:8px;margin-top:14px;}
+.mbtn{flex:1;padding:10px;border-radius:5px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;border:none;}
+.mbtn.ok{background:var(--cyan);color:#000;}
+.mbtn.cancel{background:var(--surface);color:var(--text2);border:1px solid var(--border2);}
+
+/* CONFIRM MODAL */
+.confirm-modal{background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:20px;width:calc(100% - 40px);max-width:320px;}
+.confirm-overlay{align-items:center;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);z-index:300;background:var(--card2);border:1px solid var(--border2);border-radius:7px;padding:10px 18px;font-family:var(--mono);font-size:11px;white-space:nowrap;opacity:0;transition:all .25s;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+.toast.g{border-left:3px solid var(--green);color:var(--green);}
+.toast.r{border-left:3px solid var(--red);color:var(--red);}
+
+/* FILTER ROW */
+.filter-row{display:flex;gap:8px;margin-bottom:10px;}
+.filter-row .field{flex:1;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo"><span>T</span><span>J</span><span>PRO</span></div>
+  <div class="hbtns">
+    <button class="hbtn" onclick="exportData()">EXPORT</button>
+    <label class="hbtn" style="cursor:pointer">IMPORT<input type="file" accept=".json" style="display:none" onchange="importData(event)"></label>
+  </div>
+</div>
+
+<div class="acc-bar" id="accBar"></div>
+
+<div class="tabs" id="tabs">
+  <div class="tab active" onclick="showSec('dash',0)">DASHBOARD</div>
+  <div class="tab" onclick="showSec('add',1)">+ SAVDO</div>
+  <div class="tab" onclick="showSec('hist',2)">TARIX</div>
+  <div class="tab" onclick="showSec('report',3)">HISOBOT</div>
+  <div class="tab" onclick="showSec('accs',4)">ACCOUNTLAR</div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="sec active" id="sec-dash">
+  <div class="sg" id="dashStats"></div>
+  <div class="card">
+    <div class="wr-wrap">
+      <div class="ring-w">
+        <svg class="ring" width="90" height="90" viewBox="0 0 90 90">
+          <circle class="rbg" cx="45" cy="45" r="38"/>
+          <circle class="rarc" id="rarc" cx="45" cy="45" r="38" stroke-dasharray="238.76" stroke-dashoffset="238.76"/>
+        </svg>
+        <div class="rcenter">
+          <span class="rpct" id="rpct">0%</span>
+          <span class="rlbl">WIN RATE</span>
+        </div>
+      </div>
+      <div class="wr-bars">
+        <div class="brow"><span class="blbl">WIN</span><div class="btrack"><div class="bfill g" id="wbar" style="width:0%"></div></div><span class="bcnt" id="wcnt">0</span></div>
+        <div class="brow"><span class="blbl">LOSS</span><div class="btrack"><div class="bfill r" id="lbar" style="width:0%"></div></div><span class="bcnt" id="lcnt">0</span></div>
+        <div class="brow"><span class="blbl">B/E</span><div class="btrack"><div class="bfill y" id="bebar" style="width:0%"></div></div><span class="bcnt" id="becnt">0</span></div>
+      </div>
+    </div>
+    <div class="sg" id="streakStats"></div>
+  </div>
+  <div class="tcard">
+    <div class="thead"><span class="ttitle">Oxirgi 10 savdo</span></div>
+    <div class="twrap"><table><thead><tr><th>Sana</th><th>Juftlik</th><th>Yo'n</th><th>Natija</th><th>P&L</th><th>R:R</th></tr></thead><tbody id="recentBody"></tbody></table>
+    <div class="empty" id="recentEmpty"><div class="ei">📊</div>Hali savdo yo'q</div></div>
+  </div>
+</div>
+
+<!-- ADD TRADE -->
+<div class="sec" id="sec-add">
+  <div class="acc-info" id="accInfoPanel"></div>
+  <div class="card">
+    <div class="card-title">Savdo ma'lumotlari</div>
+    <div class="fgrid">
+      <div class="field"><label>Sana</label><input type="date" id="fDate"></div>
+      <div class="field"><label>Juftlik</label><input type="text" id="fPair" placeholder="BTC/USDT"></div>
+    </div>
+    <div class="fgrid g3">
+      <div class="field"><label>Yo'nalish</label><select id="fDir"><option>LONG</option><option>SHORT</option></select></div>
+      <div class="field"><label>Natija</label><select id="fResult" onchange="calcTrade()"><option>WIN</option><option>LOSS</option><option>BREAKEVEN</option></select></div>
+      <div class="field"><label>Sessiya</label><select id="fSession"><option value="">—</option><option>London</option><option>New York</option><option>Asia</option><option>London+NY</option></select></div>
+    </div>
+    <div class="fgrid">
+      <div class="field"><label>Risk %</label><input type="number" id="fRisk" placeholder="0.5" step="0.1" oninput="calcTrade()"></div>
+      <div class="field"><label>R:R nisbati</label><input type="number" id="fRR" placeholder="2.0" step="0.1" oninput="calcTrade()"></div>
+    </div>
+    <div class="calc-box" id="calcBox" style="display:none"></div>
+    <div class="fgrid g3">
+      <div class="field"><label>P&L ($)</label><input type="number" id="fPnl" placeholder="Avtomatik" step="0.01"></div>
+      <div class="field"><label>Kirish</label><input type="number" id="fEntry" placeholder="0.00" step="any"></div>
+      <div class="field"><label>Chiqish</label><input type="number" id="fExit" placeholder="0.00" step="any"></div>
+    </div>
+    <div class="field" style="margin-bottom:10px"><label>Strategiya</label><input type="text" id="fStrat" placeholder="ICT, SMC, Breakout..."></div>
+    <div class="field" style="margin-bottom:10px"><label>Eslatma</label><textarea id="fNote" placeholder="Qisqacha tahlil..."></textarea></div>
+    <button class="btn primary" onclick="addTrade()">✓ SAVDONI QO'SHISH</button>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div class="sec" id="sec-hist">
+  <div class="filter-row">
+    <div class="field"><label>Natija</label><select id="fltRes" onchange="renderHist()"><option value="">Hammasi</option><option value="WIN">WIN</option><option value="LOSS">LOSS</option><option value="BREAKEVEN">B/E</option></select></div>
+    <div class="field"><label>Strategiya</label><input type="text" id="fltStrat" placeholder="Izlash..." oninput="renderHist()"></div>
+  </div>
+  <div class="tcard">
+    <div class="thead">
+      <span class="ttitle" id="histTitle">Barcha savdolar</span>
+      <button class="abtn del" onclick="clearAcc()">Tozalash</button>
+    </div>
+    <div class="twrap"><table><thead><tr><th>Sana</th><th>Juftlik</th><th>Yo'n</th><th>Natija</th><th>P&L</th><th>Risk%</th><th>R:R</th><th>Strat</th><th></th></tr></thead><tbody id="histBody"></tbody></table>
+    <div class="empty" id="histEmpty"><div class="ei">📂</div>Savdo topilmadi</div></div>
+  </div>
+</div>
+
+<!-- REPORT -->
+<div class="sec" id="sec-report">
+  <div class="rbtns">
+    <button class="rbtn active" onclick="setRpt('1m',this)">1 OY</button>
+    <button class="rbtn" onclick="setRpt('3m',this)">3 OY</button>
+    <button class="rbtn" onclick="setRpt('6m',this)">6 OY</button>
+    <button class="rbtn" onclick="setRpt('1y',this)">1 YIL</button>
+    <button class="rbtn" onclick="setRpt('all',this)">HAMMASI</button>
+  </div>
+  <div class="sg" id="rptStats"></div>
+  <div class="tcard">
+    <div class="thead"><span class="ttitle">Strategiya tahlili</span></div>
+    <div class="twrap"><table><thead><tr><th>Strategiya</th><th>Savdo</th><th>Win%</th><th>P&L</th><th>PF</th></tr></thead><tbody id="stratBody"></tbody></table>
+    <div class="empty" id="stratEmpty"><div class="ei">📈</div>Ma'lumot yo'q</div></div>
+  </div>
+  <div class="tcard">
+    <div class="thead"><span class="ttitle">Sessiya tahlili</span></div>
+    <div class="twrap"><table><thead><tr><th>Sessiya</th><th>Savdo</th><th>Win%</th><th>P&L</th></tr></thead><tbody id="sessBody"></tbody></table>
+    <div class="empty" id="sessEmpty"><div class="ei">🕐</div>Ma'lumot yo'q</div></div>
+  </div>
+</div>
+
+<!-- ACCOUNTS -->
+<div class="sec" id="sec-accs">
+  <div id="accsList"></div>
+  <button class="btn primary" onclick="openAddAcc()">+ YANGI ACCOUNT</button>
+</div>
+
+<!-- ADD ACCOUNT MODAL -->
+<div class="overlay hidden" id="addAccOverlay">
+  <div class="modal">
+    <div class="modal-title">Yangi Account</div>
+    <div class="fgrid" style="margin-bottom:8px">
+      <div class="field"><label>Nom</label><input type="text" id="mName" placeholder="Real Shot, FTMO..."></div>
+      <div class="field"><label>Turi</label><select id="mType"><option value="real">Real</option><option value="prop">Prop</option><option value="demo">Demo</option></select></div>
+    </div>
+    <div class="fgrid" style="margin-bottom:0">
+      <div class="field"><label>Balans ($)</label><input type="number" id="mBal" placeholder="50000"></div>
+      <div class="field"><label>Risk %</label><input type="number" id="mRisk" placeholder="0.5" step="0.1"></div>
+    </div>
+    <div class="mbtns">
+      <button class="mbtn cancel" onclick="closeModal()">Bekor</button>
+      <button class="mbtn ok" onclick="saveAcc()">Saqlash</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="overlay hidden confirm-overlay" id="confirmOverlay">
+  <div class="confirm-modal">
+    <div class="modal-title" id="confirmTitle">Tasdiqlang</div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--text2);margin-bottom:4px" id="confirmMsg"></div>
+    <div class="mbtns">
+      <button class="mbtn cancel" onclick="closeConfirm()">Bekor</button>
+      <button class="mbtn ok" style="background:var(--red)" id="confirmOkBtn">O'chirish</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== DATA =====
+var data = null;
+try { data = JSON.parse(localStorage.getItem('tjpro2') || 'null'); } catch(e){}
+if (!data || !data.accounts) {
+  data = { accounts: [{id:1, name:'Real Shot', type:'real', balance:10000, risk:1}], trades:[] };
+}
+var activeId = data.accounts[0] ? data.accounts[0].id : 1;
+var rptRange = '1m';
+var confirmCb = null;
+
+function save() {
+  try { localStorage.setItem('tjpro2', JSON.stringify(data)); } catch(e){}
+}
+
+function getAcc(id) {
+  for(var i=0;i<data.accounts.length;i++) if(data.accounts[i].id===id) return data.accounts[i];
+  return null;
+}
+function accTrades(id) {
+  return data.trades.filter(function(t){return t.accId===id;});
+}
+function stats(trades) {
+  var total=trades.length, wins=0, losses=0, bes=0, pnl=0, gw=0, gl=0, rrSum=0, rrCnt=0;
+  var maxW=0, maxL=0, streak=0, maxS=0, lstreak=0, maxLS=0;
+  for(var i=0;i<trades.length;i++){
+    var t=trades[i];
+    if(t.result==='WIN'){wins++;streak++;lstreak=0;if(streak>maxS)maxS=streak;}
+    else if(t.result==='LOSS'){losses++;lstreak++;streak=0;if(lstreak>maxLS)maxLS=lstreak;}
+    else{bes++;streak=0;lstreak=0;}
+    var p=t.pnl||0; pnl+=p;
+    if(p>0){gw+=p;if(p>maxW)maxW=p;}
+    if(p<0){gl+=Math.abs(p);if(p<maxL)maxL=p;}
+    if(t.rr){rrSum+=t.rr;rrCnt++;}
+  }
+  var wr=total?wins/total*100:0;
+  var pf=gl>0?(gw/gl).toFixed(2):gw>0?'∞':'—';
+  var avgRR=rrCnt?(rrSum/rrCnt).toFixed(1)+'R':'—';
+  return {total:total,wins:wins,losses:losses,bes:bes,wr:wr,pnl:pnl,pf:pf,avgRR:avgRR,maxW:maxW,maxL:maxL,streak:maxS,lstreak:maxLS};
+}
+function filterRange(trades, range) {
+  var now=new Date(), from;
+  if(range==='1m') from=new Date(now.getFullYear(),now.getMonth()-1,now.getDate());
+  else if(range==='3m') from=new Date(now.getFullYear(),now.getMonth()-3,now.getDate());
+  else if(range==='6m') from=new Date(now.getFullYear(),now.getMonth()-6,now.getDate());
+  else if(range==='1y') from=new Date(now.getFullYear()-1,now.getMonth(),now.getDate());
+  else return trades;
+  return trades.filter(function(t){return new Date(t.date)>=from;});
+}
+function fmt(v){return (v>=0?'+':'')+' $'+Math.abs(v).toFixed(2);}
+
+// ===== SECTIONS =====
+function showSec(id, idx) {
+  document.querySelectorAll('.sec').forEach(function(s){s.classList.remove('active');});
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  document.getElementById('sec-'+id).classList.add('active');
+  document.querySelectorAll('.tab')[idx].classList.add('active');
+  renderAll();
+}
+
+// ===== ACC BAR =====
+function renderAccBar() {
+  var html='';
+  for(var i=0;i<data.accounts.length;i++){
+    var a=data.accounts[i];
+    html+='<button class="atab'+(a.id===activeId?' active':'')+'" onclick="switchAcc('+a.id+')">'+a.name+'</button>';
+  }
+  html+='<button class="atab add" onclick="showSec(\'accs\',4)">+ Account</button>';
+  document.getElementById('accBar').innerHTML=html;
+}
+function switchAcc(id){activeId=id;renderAll();}
+
+// ===== DASHBOARD =====
+function renderDash() {
+  var acc=getAcc(activeId);
+  var trades=accTrades(activeId);
+  var s=stats(trades);
+  var curBal=(acc?acc.balance:0)+s.pnl;
+  var pc=s.pnl>=0?'g':'r';
+
+  document.getElementById('dashStats').innerHTML=
+    '<div class="sbox hi"><div class="slbl">Win Rate</div><div class="sval '+(s.wr>=50?'g':'r')+'">'+(s.total?s.wr.toFixed(1)+'%':'—')+'</div><div class="ssub">'+s.total+' savdo</div></div>'+
+    '<div class="sbox"><div class="slbl">Jami P&L</div><div class="sval '+pc+'">'+fmt(s.pnl)+'</div><div class="ssub">Bal: $'+curBal.toFixed(0)+'</div></div>'+
+    '<div class="sbox"><div class="slbl">Prof.Factor</div><div class="sval y">'+s.pf+'</div></div>'+
+    '<div class="sbox"><div class="slbl">Avg R:R</div><div class="sval c">'+s.avgRR+'</div></div>';
+
+  var wr=s.total?s.wr:0, circ=238.76;
+  var arc=document.getElementById('rarc');
+  arc.style.strokeDashoffset=circ-(wr/100*circ);
+  arc.style.stroke=wr>=50?'var(--green)':wr>=40?'var(--yellow)':'var(--red)';
+  var rp=document.getElementById('rpct');
+  rp.textContent=s.total?s.wr.toFixed(0)+'%':'—';
+  rp.style.color=wr>=50?'var(--green)':wr>=40?'var(--yellow)':'var(--red)';
+
+  var mx=Math.max(s.wins,s.losses,s.bes,1);
+  document.getElementById('wbar').style.width=(s.wins/mx*100)+'%';
+  document.getElementById('lbar').style.width=(s.losses/mx*100)+'%';
+  document.getElementById('bebar').style.width=(s.bes/mx*100)+'%';
+  document.getElementById('wcnt').textContent=s.wins;
+  document.getElementById('lcnt').textContent=s.losses;
+  document.getElementById('becnt').textContent=s.bes;
+
+  document.getElementById('streakStats').innerHTML=
+    '<div class="sbox"><div class="slbl">Max WIN seriya</div><div class="sval g" style="font-size:18px">'+s.streak+'</div></div>'+
+    '<div class="sbox"><div class="slbl">Max LOSS seriya</div><div class="sval r" style="font-size:18px">'+s.lstreak+'</div></div>';
+
+  var recent=[].concat(trades).sort(function(a,b){return new Date(b.date)-new Date(a.date);}).slice(0,10);
+  if(recent.length){
+    document.getElementById('recentEmpty').style.display='none';
+    document.getElementById('recentBody').innerHTML=recent.map(function(t){
+      var p=t.pnl||0,rb=t.result==='WIN'?'win':t.result==='LOSS'?'loss':'be',rl=t.result==='BREAKEVEN'?'B/E':t.result;
+      return '<tr><td>'+t.date+'</td><td>'+t.pair+'</td><td><span class="badge '+(t.dir==='LONG'?'long':'short')+'">'+t.dir+'</span></td><td><span class="badge '+rb+'">'+rl+'</span></td><td class="'+(p>=0?'pos':'neg')+'">'+fmt(p)+'</td><td style="color:var(--text3)">'+(t.rr?t.rr+'R':'—')+'</td></tr>';
+    }).join('');
+  } else {
+    document.getElementById('recentEmpty').style.display='block';
+    document.getElementById('recentBody').innerHTML='';
+  }
+}
+
+// ===== ADD TRADE =====
+function renderAddPanel() {
+  var acc=getAcc(activeId);
+  if(!acc) return;
+  var s=stats(accTrades(activeId));
+  var cb=(acc.balance||0)+s.pnl;
+  document.getElementById('accInfoPanel').innerHTML=
+    '<div class="ai-top"><div class="ai-name">'+acc.name+'</div><span class="atype '+acc.type+'">'+acc.type.toUpperCase()+'</span></div>'+
+    '<div class="ai-stats">'+
+    '<div class="ais"><div class="ais-l">Hisob</div><div class="ais-v c">$'+cb.toFixed(0)+'</div></div>'+
+    '<div class="ais"><div class="ais-l">Risk</div><div class="ais-v y">'+(acc.risk||0)+'%</div></div>'+
+    '<div class="ais"><div class="ais-l">Win Rate</div><div class="ais-v '+(s.wr>=50?'g':'r')+'">'+(s.total?s.wr.toFixed(1)+'%':'—')+'</div></div>'+
+    '<div class="ais"><div class="ais-l">P&L</div><div class="ais-v '+(s.pnl>=0?'g':'r')+'">'+fmt(s.pnl)+'</div></div>'+
+    '</div>';
+  if(!document.getElementById('fRisk').value && acc.risk) document.getElementById('fRisk').value=acc.risk;
+}
+
+function calcTrade() {
+  var acc=getAcc(activeId); if(!acc) return;
+  var risk=parseFloat(document.getElementById('fRisk').value)||0;
+  var rr=parseFloat(document.getElementById('fRR').value)||0;
+  var result=document.getElementById('fResult').value;
+  var s=stats(accTrades(activeId));
+  var cb=(acc.balance||0)+s.pnl;
+  var rAmt=cb*risk/100;
+  var pnl=result==='WIN'?rAmt*rr:result==='LOSS'?-rAmt:0;
+  if(risk>0||rr>0){
+    document.getElementById('calcBox').style.display='flex';
+    document.getElementById('calcBox').innerHTML=
+      '<div class="citem"><span class="clbl">Risk:</span><span class="cval r">$'+rAmt.toFixed(2)+'</span></div>'+
+      (rr>0?'<div class="citem"><span class="clbl">Potensial:</span><span class="cval g">$'+(rAmt*rr).toFixed(2)+'</span></div>':'')+
+      (pnl!==0?'<div class="citem"><span class="clbl">P&L:</span><span class="cval '+(pnl>=0?'g':'r')+'">'+fmt(pnl)+'</span></div>':'')+
+      '<div class="citem"><span class="clbl">Hisob:</span><span class="cval c">$'+cb.toFixed(0)+'</span></div>';
+    if(pnl!==0 && !document.getElementById('fPnl').value) document.getElementById('fPnl').value=pnl.toFixed(2);
+  }
+}
+
+function addTrade() {
+  var date=document.getElementById('fDate').value;
+  var pair=document.getElementById('fPair').value.trim().toUpperCase();
+  if(!date||!pair){showToast('Sana va juftlikni kiriting!','r');return;}
+  var risk=parseFloat(document.getElementById('fRisk').value)||null;
+  var rr=parseFloat(document.getElementById('fRR').value)||null;
+  var result=document.getElementById('fResult').value;
+  var pnlVal=document.getElementById('fPnl').value;
+  var pnl=parseFloat(pnlVal)||0;
+  if(!pnlVal && risk && rr) {
+    var acc=getAcc(activeId);
+    var s=stats(accTrades(activeId));
+    var cb=(acc.balance||0)+s.pnl;
+    var rAmt=cb*risk/100;
+    pnl=result==='WIN'?rAmt*rr:result==='LOSS'?-rAmt:0;
+  }
+  data.trades.push({
+    id:Date.now(), accId:activeId, date:date, pair:pair,
+    dir:document.getElementById('fDir').value,
+    result:result, pnl:pnl, risk:risk, rr:rr,
+    strategy:document.getElementById('fStrat').value.trim(),
+    session:document.getElementById('fSession').value,
+    note:document.getElementById('fNote').value.trim(),
+    entry:parseFloat(document.getElementById('fEntry').value)||null,
+    exit:parseFloat(document.getElementById('fExit').value)||null
+  });
+  save();
+  ['fPair','fPnl','fRisk','fRR','fStrat','fNote','fEntry','fExit'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('fResult').value='WIN';
+  document.getElementById('fSession').value='';
+  document.getElementById('calcBox').style.display='none';
+  showToast('Savdo qo\'shildi ✓','g');
+  renderAll();
+}
+
+// ===== HISTORY =====
+function renderHist() {
+  var trades=accTrades(activeId);
+  var fr=document.getElementById('fltRes').value;
+  var fs=document.getElementById('fltStrat').value.toLowerCase();
+  var filtered=trades.filter(function(t){
+    if(fr && t.result!==fr) return false;
+    if(fs && !(t.strategy||'').toLowerCase().includes(fs)) return false;
+    return true;
+  }).sort(function(a,b){return new Date(b.date)-new Date(a.date);});
+  document.getElementById('histTitle').textContent=filtered.length+' ta savdo';
+  if(filtered.length){
+    document.getElementById('histEmpty').style.display='none';
+    document.getElementById('histBody').innerHTML=filtered.map(function(t){
+      var p=t.pnl||0,rb=t.result==='WIN'?'win':t.result==='LOSS'?'loss':'be',rl=t.result==='BREAKEVEN'?'B/E':t.result;
+      return '<tr><td>'+t.date+'</td><td>'+t.pair+'</td>'+
+        '<td><span class="badge '+(t.dir==='LONG'?'long':'short')+'">'+t.dir+'</span></td>'+
+        '<td><span class="badge '+rb+'">'+rl+'</span></td>'+
+        '<td class="'+(p>=0?'pos':'neg')+'">'+fmt(p)+'</td>'+
+        '<td style="color:var(--text3)">'+(t.risk?t.risk+'%':'—')+'</td>'+
+        '<td style="color:var(--text3)">'+(t.rr?t.rr+'R':'—')+'</td>'+
+        '<td style="color:var(--text3);max-width:70px;overflow:hidden;text-overflow:ellipsis">'+(t.strategy||'—')+'</td>'+
+        '<td><button class="delbtn" onclick="delTrade('+t.id+')">×</button></td></tr>';
+    }).join('');
+  } else {
+    document.getElementById('histEmpty').style.display='block';
+    document.getElementById('histBody').innerHTML='';
+  }
+}
+
+function delTrade(id) {
+  confirm2('Savdoni o\'chirmoqchimisiz?','', function(){
+    data.trades=data.trades.filter(function(t){return t.id!==id;});
+    save(); showToast('O\'chirildi','r'); renderAll();
+  });
+}
+
+function clearAcc() {
+  confirm2('Bu accountdagi BARCHA savdolarni o\'chirish','Qaytarib bo\'lmaydi!', function(){
+    data.trades=data.trades.filter(function(t){return t.accId!==activeId;});
+    save(); showToast('Account tozalandi','r'); renderAll();
+  });
+}
+
+// ===== REPORT =====
+function setRpt(range, el) {
+  rptRange=range;
+  document.querySelectorAll('.rbtn').forEach(function(b){b.classList.remove('active');});
+  el.classList.add('active');
+  renderReport();
+}
+function renderReport() {
+  var all=accTrades(activeId);
+  var trades=filterRange(all,rptRange);
+  var s=stats(trades);
+  document.getElementById('rptStats').innerHTML=
+    '<div class="sbox"><div class="slbl">Savdolar</div><div class="sval c">'+s.total+'</div></div>'+
+    '<div class="sbox"><div class="slbl">Win Rate</div><div class="sval '+(s.wr>=50?'g':'r')+'">'+(s.total?s.wr.toFixed(1)+'%':'—')+'</div></div>'+
+    '<div class="sbox"><div class="slbl">Jami P&L</div><div class="sval '+(s.pnl>=0?'g':'r')+'">'+fmt(s.pnl)+'</div></div>'+
+    '<div class="sbox"><div class="slbl">Prof.Factor</div><div class="sval y">'+s.pf+'</div></div>'+
+    '<div class="sbox"><div class="slbl">Avg R:R</div><div class="sval c">'+s.avgRR+'</div></div>'+
+    '<div class="sbox"><div class="slbl">MAX WIN</div><div class="sval g" style="font-size:14px">'+fmt(s.maxW)+'</div></div>'+
+    '<div class="sbox"><div class="slbl">MAX LOSS</div><div class="sval r" style="font-size:14px">'+fmt(s.maxL)+'</div></div>'+
+    '<div class="sbox"><div class="slbl">WIN seriya</div><div class="sval g">'+s.streak+'</div></div>'+
+    '<div class="sbox"><div class="slbl">LOSS seriya</div><div class="sval r">'+s.lstreak+'</div></div>';
+
+  var strats={};
+  trades.forEach(function(t){var k=t.strategy||'Nomsiz';if(!strats[k])strats[k]=[];strats[k].push(t);});
+  var skeys=Object.keys(strats);
+  if(skeys.length){
+    document.getElementById('stratEmpty').style.display='none';
+    document.getElementById('stratBody').innerHTML=skeys.map(function(k){
+      var ss=stats(strats[k]);
+      return '<tr><td>'+k+'</td><td style="color:var(--text2)">'+ss.total+'</td><td class="'+(ss.wr>=50?'pos':'neg')+'">'+ss.wr.toFixed(1)+'%</td><td class="'+(ss.pnl>=0?'pos':'neg')+'">'+fmt(ss.pnl)+'</td><td style="color:var(--yellow)">'+ss.pf+'</td></tr>';
+    }).join('');
+  } else { document.getElementById('stratEmpty').style.display='block'; document.getElementById('stratBody').innerHTML=''; }
+
+  var sess={};
+  trades.filter(function(t){return t.session;}).forEach(function(t){if(!sess[t.session])sess[t.session]=[];sess[t.session].push(t);});
+  var ssk=Object.keys(sess);
+  if(ssk.length){
+    document.getElementById('sessEmpty').style.display='none';
+    document.getElementById('sessBody').innerHTML=ssk.map(function(k){
+      var ss=stats(sess[k]);
+      return '<tr><td>'+k+'</td><td style="color:var(--text2)">'+ss.total+'</td><td class="'+(ss.wr>=50?'pos':'neg')+'">'+ss.wr.toFixed(1)+'%</td><td class="'+(ss.pnl>=0?'pos':'neg')+'">'+fmt(ss.pnl)+'</td></tr>';
+    }).join('');
+  } else { document.getElementById('sessEmpty').style.display='block'; document.getElementById('sessBody').innerHTML=''; }
+}
+
+// ===== ACCOUNTS PAGE =====
+function renderAccsPage() {
+  document.getElementById('accsList').innerHTML=data.accounts.map(function(acc){
+    var s=stats(accTrades(acc.id));
+    var cb=(acc.balance||0)+s.pnl;
+    var canDel=data.accounts.length>1;
+    return '<div class="acc-item">'+
+      '<div class="acc-item-top"><div class="acc-item-name">'+acc.name+' <span class="atype '+acc.type+'">'+acc.type.toUpperCase()+'</span></div></div>'+
+      '<div class="acc-item-meta">'+
+        'Balans: <span style="color:var(--cyan)">$'+cb.toFixed(0)+'</span> &nbsp;|&nbsp; '+
+        'Risk: <span style="color:var(--yellow)">'+(acc.risk||0)+'%</span> &nbsp;|&nbsp; '+
+        'Savdo: <span style="color:var(--text2)">'+s.total+'</span> &nbsp;|&nbsp; '+
+        'WR: <span style="color:'+(s.wr>=50?'var(--green)':'var(--red)')+'">'+  (s.total?s.wr.toFixed(1)+'%':'—')+'</span>'+
+      '</div>'+
+      '<div class="acc-item-btns">'+
+        '<button class="abtn sel" onclick="switchAcc('+acc.id+');showSec(\'dash\',0)">Tanlash</button>'+
+        (canDel?'<button class="abtn del" onclick="deleteAcc('+acc.id+')">O\'chirish</button>':'')+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function openAddAcc(){document.getElementById('addAccOverlay').classList.remove('hidden');}
+function closeModal(){document.getElementById('addAccOverlay').classList.add('hidden');}
+
+function saveAcc() {
+  var name=document.getElementById('mName').value.trim();
+  if(!name){showToast('Nom kiriting!','r');return;}
+  data.accounts.push({
+    id:Date.now(), name:name,
+    type:document.getElementById('mType').value,
+    balance:parseFloat(document.getElementById('mBal').value)||0,
+    risk:parseFloat(document.getElementById('mRisk').value)||0
+  });
+  save(); closeModal();
+  ['mName','mBal','mRisk'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('mType').value='real';
+  showToast(name+' qo\'shildi ✓','g'); renderAll();
+}
+
+function deleteAcc(id) {
+  var acc=getAcc(id);
+  confirm2(acc.name+' accountini o\'chirish', 'Barcha savdolar ham o\'chadi!', function(){
+    data.accounts=data.accounts.filter(function(a){return a.id!==id;});
+    data.trades=data.trades.filter(function(t){return t.accId!==id;});
+    if(activeId===id) activeId=data.accounts[0]?data.accounts[0].id:null;
+    save(); showToast('Account o\'chirildi','r'); renderAll();
+  });
+}
+
+// ===== CONFIRM =====
+function confirm2(title, msg, cb) {
+  document.getElementById('confirmTitle').textContent=title;
+  document.getElementById('confirmMsg').textContent=msg;
+  document.getElementById('confirmOverlay').classList.remove('hidden');
+  confirmCb=cb;
+}
+function closeConfirm(){document.getElementById('confirmOverlay').classList.add('hidden');confirmCb=null;}
+document.getElementById('confirmOkBtn').onclick=function(){
+  if(confirmCb) confirmCb();
+  closeConfirm();
+};
+
+// ===== EXPORT/IMPORT =====
+function exportData() {
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='tjpro-'+new Date().toISOString().split('T')[0]+'.json';
+  a.click(); showToast('Export qilindi ✓','g');
+}
+function importData(e) {
+  var file=e.target.files[0]; if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      var imp=JSON.parse(ev.target.result);
+      if(imp.accounts&&imp.trades){
+        data=imp; activeId=data.accounts[0]?data.accounts[0].id:null;
+        save(); renderAll(); showToast('Import muvaffaqiyatli ✓','g');
+      } else showToast('Noto\'g\'ri fayl formati!','r');
+    }catch(e){showToast('Fayl o\'qilmadi!','r');}
+  };
+  reader.readAsText(file); e.target.value='';
+}
+
+// ===== TOAST =====
+function showToast(msg,type){
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast '+type+' show';
+  setTimeout(function(){t.classList.remove('show');},2500);
+}
+
+// ===== RENDER ALL =====
+function renderAll(){
+  renderAccBar(); renderDash(); renderAddPanel(); renderHist(); renderReport(); renderAccsPage();
+}
+
+// ===== INIT =====
+document.getElementById('fDate').value=new Date().toISOString().split('T')[0];
+renderAll();
+</script>
+</body>
+</html>
